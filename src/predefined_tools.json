@@ -1,0 +1,44 @@
+{
+    "list_datasets": {
+      "name": "list_datasets",
+      "description": "Lists all available dataset keys/names stored in the database",
+      "function_signature": "list_datasets() -> str",
+      "parameters": {},
+      "returns": "String containing comma-separated list of all dataset names available in the database",
+      "usage_example": "list_datasets()"
+    },
+    "describe_dataset": {
+      "name": "describe_dataset", 
+      "description": "Provides a comprehensive description of the specified dataset including schema, data types, null values, and basic statistics",
+      "function_signature": "describe_dataset(dataset: str) -> str",
+      "parameters": {
+        "dataset": {
+          "type": "str",
+          "description": "Name/key of the dataset to describe",
+          "required": true
+        }
+      },
+      "returns": "String containing detailed dataset description including column names, data types, null counts, basic statistics, and dataset shape",
+      "usage_example": "describe_dataset('customer_data')"
+    },
+    "dataset_head": {
+      "name": "dataset_head",
+      "description": "Returns the first N rows of the specified dataset for data inspection and preview",
+      "function_signature": "dataset_head(dataset: str, nrows: int = 5) -> str",
+      "parameters": {
+        "dataset": {
+          "type": "str", 
+          "description": "Name/key of the dataset to preview",
+          "required": true
+        },
+        "nrows": {
+          "type": "int",
+          "description": "Number of rows to return from the top of the dataset",
+          "required": false,
+          "default": 5
+        }
+      },
+      "returns": "String representation of the first nrows of the dataset in a readable format",
+      "usage_example": "dataset_head('sales_data', nrows=10)"
+    }
+  }
