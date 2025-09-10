@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from langgraph.types import Command
 
 from src.researcher.states import ConversationState
+from src.researcher.base import UnifiedNodeBase
 
 
 class DelegateFormatterArgs(BaseModel):
@@ -15,7 +16,7 @@ class DelegateFormatterArgs(BaseModel):
     instruction: str = Field(description="High-level instruction for the formatter", default="")
 
 
-class ResearcherNode:
+class ResearcherNode(UnifiedNodeBase):
     """
     Minimal reasoning node for multi-turn dialog.
 
@@ -34,9 +35,10 @@ class ResearcherNode:
     - Only include exact pandas code when 100% certain about dataset names and availability; otherwise provide high-level instructions and let the formatter choose safe operations.
     """
 
-    def __init__(self, *, system_prompt: str, model: str = "anthropic:claude-sonnet-4-20250514") -> None:
+    def __init__(self, *, system_prompt: str, model: str = "anthropic:claude-sonnet-4-20250514", **base_kwargs) -> None:
         if not isinstance(system_prompt, str) or not system_prompt.strip():
             raise ValueError("system_prompt must be a non-empty string")
+        super().__init__(**base_kwargs)
         self._system_prompt = self.SYSTEM_PROMPT_START + system_prompt + self.SYSTEM_PROMPT_END
         self._llm = init_chat_model(model=model)
         # Bind a delegate tool that signals a graph transition to the formatter node
@@ -53,21 +55,26 @@ class ResearcherNode:
 
     def __call__(self, state: ConversationState) -> dict:
         system = SystemMessage(content=self._system_prompt)
-        model = self._llm.bind_tools([self._delegate_tool])
+        model = self.bind_default_tools(self._llm, extra_tools=[self._delegate_tool])
         ai: AIMessage = model.invoke([system, *state["messages"]])  # type: ignore[arg-type]
-        if getattr(ai, "tool_calls", None):
-            call = ai.tool_calls[0]
-            raw_args = call.get("args") or {}
-            # Normalize keys for downstream formatter node
-            instruction = (raw_args.get("instruction") or "").strip()
-            code = (raw_args.get("code") or raw_args.get("pandas") or "").strip()
-            return Command(
-                goto="formatter",
-                update={
-                    "messages": [ai],
-                    "formatter_task": {"instruction": instruction, "code": code},
-                },
-            )
+        if not getattr(ai, "tool_calls", None):
+            return {"messages": [ai]}
+
+        # If delegation tool present, bubble out via state for outer routing
+        for tc in ai.tool_calls:
+            name = tc.get("name")
+            if name == "delegate_to_formatter":
+                args = tc.get("args") or {}
+                instruction = (args.get("instruction") or "").strip()
+                code = (args.get("code") or args.get("pandas") or "").strip()
+                if instruction or code:
+                    return {
+                        "messages": [ai],
+                        "formatter_task": {"instruction": instruction, "code": code},
+                    }
+                # If empty args, do not bubble; allow tool loop to run (will be no-op)
+
+        # Otherwise, allow outer graph to route to the unified tool node for local tools
         return {"messages": [ai]}
 
 

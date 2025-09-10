@@ -16,6 +16,7 @@ from langgraph.types import Command
 from src.researcher.states import ConversationState
 from src.researcher.nodes.researcher import ResearcherNode
 from src.researcher.nodes.data_formatter import build_data_formatter_app
+from src.researcher.nodes.pandas_tool_node import PandasToolNode
 from src.researcher.db import ArrowDatabase
 from src.researcher.project_config import ensure_project_config
 
@@ -88,9 +89,9 @@ def compile_agent(project_path: str) -> CompiledAgent:
     graph = StateGraph(ConversationState)
     formatter_app = build_data_formatter_app(project_dir=cfg.project_dir, socket_dir=cfg.socket_dir, db=database, model_name=model_name)
 
-    researcher = ResearcherNode(system_prompt=system_prompt, model=model_name)
+    researcher = ResearcherNode(system_prompt=system_prompt, model=model_name, db=database, cfg=cfg)
 
-    # Formatter node: invoke sub-app and pass its last AI message back into the main thread
+    # Wrap the formatter sub-app
     def formatter_node(state: ConversationState) -> ConversationState:
         args = state.get("formatter_task", {})
         instruction = (args.get("instruction") or "").strip()
@@ -108,31 +109,46 @@ def compile_agent(project_path: str) -> CompiledAgent:
         res = formatter_app.invoke({"messages": [HumanMessage(content=prompt)]})
         msgs = res.get("messages", [])
         # Build a ToolMessage replying to the researcher's delegate tool call
-        # Find the last AIMessage with tool_calls to extract the tool_call_id
+        # Find the most recent AI message with tool_calls to extract tool_call_id
         tool_call_id = None
-        last_msgs = state.get("messages", [])
-        if last_msgs:
-            last_ai = last_msgs[-1]
+        for m in reversed(state.get("messages", [])):
             try:
-                calls = getattr(last_ai, "tool_calls", None) or []
+                calls = getattr(m, "tool_calls", None) or []
                 if calls:
                     tool_call_id = calls[0].get("id")
+                    break
             except Exception:
-                tool_call_id = None
+                continue
         content = getattr(msgs[-1], "content", "OK") if msgs else "OK"
         tm = ToolMessage(tool_call_id=tool_call_id or "", content=content, name="delegate_to_formatter")
-        return {"messages": [tm]}
+        # Clear delegation payload to avoid repeated routing on subsequent turns
+        return {"messages": [tm], "formatter_task": {}}
+
+    # Researcher subgraph: llm step then unified tool node loop with bubble-out
+    def researcher_tool_node(state: ConversationState) -> dict:
+        # Execute any tool_calls from last AI message via unified node
+        tool = PandasToolNode(project_dir=cfg.project_dir, socket_dir=cfg.socket_dir, db=database, cfg={})
+        return tool(state)  # returns {"messages": [ToolMessage, ...]}
 
     graph.add_node("researcher", researcher)
+    graph.add_node("researcher_tool", researcher_tool_node)
     graph.add_node("formatter", formatter_node)
     graph.add_edge(START, "researcher")
-    # Delegate via Command from researcher → formatter, otherwise end
-    graph.add_conditional_edges(
-        "researcher",
-        lambda s: "formatter" if isinstance(s, Command) else END,
-        {"formatter": "formatter", END: END},
-    )
-    # After formatter completes, return to researcher for summary/follow-up
+
+    def after_researcher(state: ConversationState) -> str:
+        # Bubble out only if a non-empty delegation payload is present
+        task = state.get("formatter_task") or {}
+        if isinstance(task, dict) and (task.get("instruction") or task.get("code")):
+            return "formatter"
+        last_msgs = state.get("messages", [])
+        last = last_msgs[-1] if last_msgs else None
+        calls = getattr(last, "tool_calls", None) if last else []
+        # If the last AI has tool_calls, run tools; else end the subgraph turn
+        return "researcher_tool" if calls else END
+
+    graph.add_conditional_edges("researcher", after_researcher, {"researcher_tool": "researcher_tool", "formatter": "formatter", END: END})
+    graph.add_edge("researcher_tool", "researcher")
+    # After formatter responds, return to researcher once to summarize, then natural end if no further tools
     graph.add_edge("formatter", "researcher")
 
     app = graph.compile(checkpointer=saver)

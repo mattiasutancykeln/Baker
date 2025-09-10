@@ -19,6 +19,12 @@ def _parquet_path(root: Path, name: str) -> Path:
     return root / f"{name}.parquet"
 
 
+def _atomic_write_parquet(table: pa.Table, path: Path) -> None:
+    tmp = path.with_suffix(".tmp.parquet")
+    pq.write_table(table, tmp)
+    tmp.replace(path)
+
+
 @dataclass
 class ArrowDatabase:
     root_dir: Path
@@ -56,10 +62,10 @@ class ArrowDatabase:
 
     def save_table(self, name: str, table: pd.DataFrame | pa.Table) -> None:
         if isinstance(table, pd.DataFrame):
-            pa_table = pa.Table.from_pandas(table)
+            pa_table = pa.Table.from_pandas(table, preserve_index=True)
         else:
             pa_table = table
-        pq.write_table(pa_table, _parquet_path(self.root_dir, name))
+        _atomic_write_parquet(pa_table, _parquet_path(self.root_dir, name))
 
     def delete_table(self, name: str) -> None:
         path = _parquet_path(self.root_dir, name)
@@ -74,7 +80,7 @@ class ArrowDatabase:
         return self.get_table(name)
 
     def write(self, name: str, table: pa.Table) -> None:
-        pq.write_table(table, self.path_of(name))
+        _atomic_write_parquet(table, self.path_of(name))
 
     # Descriptions
     def get_description(self, name: str) -> Optional[str]:

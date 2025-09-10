@@ -10,9 +10,10 @@ from langgraph.graph import MessagesState
 from src.researcher.tools.pandastool import pandastool as _pandastool
 from sandbox.sandbox_util import build_image as sandbox_build, start_container as sandbox_start, ping as sandbox_ping
 from src.researcher.db import ArrowDatabase
+from src.researcher.base import UnifiedNodeBase
 
 
-class PandasToolNode:
+class PandasToolNode(UnifiedNodeBase):
     """
     Executes sandbox pandas tool calls emitted by the LLM.
 
@@ -21,9 +22,9 @@ class PandasToolNode:
     """
 
     def __init__(self, *, project_dir: str, socket_dir: str, db: ArrowDatabase, cfg: Dict[str, Any]) -> None:
+        super().__init__(db=db)
         self._project_dir = project_dir
         self._socket_dir = socket_dir
-        self._db = db
         self._cfg = cfg
 
     def __call__(self, state: MessagesState) -> dict:
@@ -91,6 +92,18 @@ class PandasToolNode:
                     except Exception as e:
                         content = json.dumps({"status": "[ERROR] update_description", "stderr": str(e)})
                 out.append(ToolMessage(tool_call_id=tc.get("id"), content=content, name="update_data_description"))
+
+            elif name == "list_datasets":
+                content = self._tool_list_datasets()
+                out.append(ToolMessage(tool_call_id=tc.get("id"), content=content, name=name))
+
+            elif name == "dataset_describe":
+                content = self._tool_dataset_describe(args.get("name", ""))
+                out.append(ToolMessage(tool_call_id=tc.get("id"), content=content, name=name))
+
+            elif name == "dataset_head":
+                content = self._tool_dataset_head(args.get("name", ""), int(args.get("n", 5)))
+                out.append(ToolMessage(tool_call_id=tc.get("id"), content=content, name=name))
 
             else:
                 # Always return a tool_result for any tool_use to satisfy the protocol

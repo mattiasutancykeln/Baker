@@ -10,8 +10,8 @@ from langgraph.graph import MessagesState, START, END, StateGraph
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from src.researcher.nodes.pandas_tool_node import PandasToolNode
-from src.researcher.tools.pandastool import pandastool as _pandastool
 from src.researcher.db import ArrowDatabase
+from src.researcher.base import UnifiedNodeBase
 
 
 class DFState(TypedDict):
@@ -52,23 +52,29 @@ def build_data_formatter_app(*, project_dir: str, socket_dir: str, db: ArrowData
     )
 
     model = init_chat_model(model=model_name)
-    llm = model.bind_tools([t_pandas, t_update])
 
-    def step(state: MessagesState) -> dict:
-        sys = SystemMessage(content=(
-            "You are the Data Formatter. You exclusively manage data formatting and storage for this project.\n"
-            "- Single source of truth: project database at data_dir. Use dataset-name keys.\n"
-            "- Minimize dataset proliferation; when safe, merge to reduce duplicates; preserve uniqueness.\n"
-            "- Maintain 'descr' entries: after significant changes or new datasets, call update_data_description.\n"
-            "- Never print large data; summarize actions and results.\n"
-            "- Consult format rules below each turn.\n\n"
-            f"Format Rules:\n{rules}"
-        ))
-        ai: AIMessage = llm.invoke([sys, *state["messages"]])
-        return {"messages": [ai]}
+    class FormatterLLMNode(UnifiedNodeBase):
+        def __init__(self, *, db: ArrowDatabase):
+            super().__init__(db=db)
+            self._model = model
+            self._rules = rules
+
+        def __call__(self, state: MessagesState) -> dict:
+            sys = SystemMessage(content=(
+                "You are the Data Formatter. You exclusively manage data formatting and storage for this project.\n"
+                "- Single source of truth: project database at data_dir. Use dataset-name keys.\n"
+                "- Minimize dataset proliferation; when safe, merge to reduce duplicates; preserve uniqueness.\n"
+                "- Maintain 'descr' entries: after significant changes or new datasets, call update_data_description.\n"
+                "- Never print large data; summarize actions and results.\n"
+                "- Consult format rules below each turn.\n\n"
+                f"Format Rules:\n{self._rules}"
+            ))
+            llm = self.bind_default_tools(self._model, extra_tools=[t_pandas, t_update])
+            ai: AIMessage = llm.invoke([sys, *state["messages"]])
+            return {"messages": [ai]}
 
     graph = StateGraph(MessagesState)
-    graph.add_node("step", step)
+    graph.add_node("step", FormatterLLMNode(db=db))
     graph.add_node(
         "tool",
         PandasToolNode(project_dir=project_dir, socket_dir=socket_dir, db=db, cfg={}),
@@ -87,6 +93,7 @@ def build_data_formatter_app(*, project_dir: str, socket_dir: str, db: ArrowData
     memory_dir = Path(project_dir) / ".memory"
     memory_dir.mkdir(parents=True, exist_ok=True)
     saver = SqliteSaver.from_conn_string(str(memory_dir / "checkpoints.sqlite"))
-    return graph.compile(checkpointer=saver)
+    app = graph.compile(checkpointer=saver)
+    return app
 
 
