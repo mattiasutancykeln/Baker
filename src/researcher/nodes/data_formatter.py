@@ -25,7 +25,7 @@ def _ensure_rules(project_dir: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def build_data_formatter_app(*, project_dir: str, socket_dir: str, db: ArrowDatabase, model_name: str) -> Any:
+def build_data_formatter_app(*, project_dir: str, socket_dir: str, db: ArrowDatabase, model_name: str, model_extra: dict | None = None) -> Any:
     rules = _ensure_rules(project_dir)
 
     # LLM tool schemas (LLM-facing only)
@@ -51,7 +51,7 @@ def build_data_formatter_app(*, project_dir: str, socket_dir: str, db: ArrowData
         ),
     )
 
-    model = init_chat_model(model=model_name)
+    model = init_chat_model(model=model_name, extra_body=model_extra or None)
 
     class FormatterLLMNode(UnifiedNodeBase):
         def __init__(self, *, db: ArrowDatabase):
