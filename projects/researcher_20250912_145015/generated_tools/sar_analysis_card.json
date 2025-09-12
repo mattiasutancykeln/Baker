@@ -1,0 +1,10 @@
+{
+  "name": "sar_analysis",
+  "description": "Performs structure-activity relationship (SAR) analysis on molecular datasets. Analyzes correlations between molecular descriptors/substructures and activity responses, identifies activity cliffs, and provides representative examples. Accepts dataset names and flexible column specifications for SMILES and response variables. Automatically infers response column if not specified. Returns a comprehensive text summary of SAR findings and optionally saves supporting data/visualizations.",
+  "examples": [
+    "sar_analysis(\"drug_screening_data\", smiles_cols=\"molecule_smiles\", response=\"ic50_value\", out_dataset=\"sar_results\")\n# Analyzes structure-activity relationships in drug screening dataset, using IC50 values as response, saves detailed results",
+    "sar_analysis(\"reaction_yields\", out_dataset=\"reaction_sar\") \n# Auto-detects SMILES and response columns in reaction dataset, performs SAR analysis and saves supporting data"
+  ],
+  "data_inputs": "dataset (string): Name of dataset containing molecular structures and activity data\nsmiles_cols (string or list, optional): Column name(s) containing SMILES structures\nresponse (string, optional): Column name for numeric response/activity values\nfeatures (string, optional): Name of dataset containing precomputed molecular features",
+  "data_outputs": "Text summary of SAR analysis findings including descriptor correlations, activity cliffs, and representative examples\nOptional: Supporting datasets saved with specified out_dataset prefix\nOptional: Correlation visualization plot saved to output directory"
+}

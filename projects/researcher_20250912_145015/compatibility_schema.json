@@ -1,0 +1,10 @@
+{
+  "purpose": "General guidelines to encourage flexible, compatible tools",
+  "inputs": "Prefer dataset-name strings and simple scalars; avoid passing large objects",
+  "db_access": "All data via db.get_table/save_table; no external I/O",
+  "returns": "Always return concise human-readable strings; optional diagnostics may be saved",
+  "filesystem_outputs": "If saving plots/images/tables, write only under config['output_path'] (projects/<slug>/outputs/). Do not read from this directory; it is write-only for visualization artifacts.",
+  "errors": "Provide actionable messages; suggest overrides; avoid enforcing strict schemas",
+  "naming": "Encourage clear, deterministic artifact names when saving; versioning suggested",
+  "privacy_security": "No secrets in returns/logs; treat config as read-only"
+}

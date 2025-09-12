@@ -1,0 +1,9 @@
+{
+  "slug": "researcher_20250912_145015",
+  "project_dir": "/mnt/c/Users/matti/OneDrive/Documents/agent_project/projects/researcher_20250912_145015",
+  "data_dir": "/mnt/c/Users/matti/OneDrive/Documents/agent_project/projects/researcher_20250912_145015/data",
+  "output_path": "/mnt/c/Users/matti/OneDrive/Documents/agent_project/projects/researcher_20250912_145015/output",
+  "socket_dir": "/home/mattiasutancykeln/.agent_sockets/researcher_20250912_145015",
+  "sandbox_image": "local/sandbox-py311-rdkit:latest",
+  "idle_hibernate_sec": 900
+}

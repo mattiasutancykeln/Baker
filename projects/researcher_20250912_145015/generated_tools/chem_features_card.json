@@ -1,0 +1,10 @@
+{
+  "name": "chem_features",
+  "description": "Standardizes molecules and computes chemical features from SMILES columns. Supports Morgan fingerprints, RDKit descriptors, and physicochemical properties. Handles multiple SMILES columns and flexible input formats.",
+  "examples": [
+    "chem_features('compounds_dataset', 'smiles', 'compound_features', features='morgan,physchem', radius=3, n_bits=2048)",
+    "chem_features('drug_data', ['smiles_1', 'smiles_2'], 'drug_descriptors', features='rdkit,physchem', standardize=False)"
+  ],
+  "data_inputs": "Dataset (name/dict/CSV string) with SMILES columns",
+  "data_outputs": "Feature table with computed chemical descriptors saved to out_dataset"
+}

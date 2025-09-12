@@ -1,0 +1,10 @@
+{
+  "name": "chem_similarity",
+  "description": "Computes molecular similarity on fingerprints derived from SMILES and saves results to out_dataset. Accepts dataset and ref_dataset as dataset names. Accepts smiles_cols as string or list (alias: smiles_col). If ref_dataset is provided, computes similarity against the reference set; otherwise, computes all-vs-all. If cluster=True, performs simple clustering (e.g., Butina) and includes cluster labels. If threshold is provided, optionally saves a long-form pair list above the threshold to keep artifacts manageable; otherwise warns when matrices are very large. Returns a concise text summary with basic stats and guidance if SMILES columns are ambiguous.",
+  "examples": [
+    "chem_similarity('compounds', 'smiles', 'similarity_matrix', method='tanimoto', threshold=0.7)\n# Computes Tanimoto similarities for all compound pairs above 0.7 threshold",
+    "chem_similarity('test_compounds', 'canonical_smiles', 'clustered_similarity', cluster=True, cluster_method='butina', threshold=0.8)\n# Computes similarities and performs Butina clustering with 0.8 similarity threshold"
+  ],
+  "data_inputs": "dataset (string): Name of input dataset containing SMILES\nsmiles_cols (string or list): Column name(s) containing SMILES strings\nref_dataset (string, optional): Name of reference dataset for comparison",
+  "data_outputs": "out_dataset: Similarity matrix or pairwise similarities\n{out_dataset}_clusters (if cluster=True): Cluster assignments for molecules"
+}

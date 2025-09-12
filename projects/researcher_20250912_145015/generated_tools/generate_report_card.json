@@ -1,0 +1,10 @@
+{
+  "name": "generate_report",
+  "description": "Compiles a human-readable report from provided sections (dataset names and/or text snippets). Accepts section entries as dataset names or literal text. Automatically includes key stats/figures if available, with simple captions. Saves the assembled report (markdown or HTML plus linked images) to out_dataset and returns a short summary with the artifact location.",
+  "examples": [
+    "generate_report(\"Sales Analysis Q4\", [\"sales_data\", \"customer_metrics\", \"## Executive Summary\\nQ4 showed strong growth across all segments.\"], \"q4_sales_report\", include_plots=True, notes=\"Prepared for board meeting\")",
+    "generate_report(\"Data Quality Assessment\", [\"raw_data\", \"cleaned_data\", \"validation_results\"], \"quality_report\", include_plots=False)"
+  ],
+  "data_inputs": "title (str): Report title; sections (list): List of dataset names (strings) or literal text snippets; out_dataset (str): Name for saving the compiled report; include_plots (bool, optional): Whether to include plots/visualizations, defaults to True; notes (str, optional): Additional notes to include in report",
+  "data_outputs": "Saves compiled report as dataset with markdown/HTML content and linked images. Returns summary string with artifact location and report details."
+}

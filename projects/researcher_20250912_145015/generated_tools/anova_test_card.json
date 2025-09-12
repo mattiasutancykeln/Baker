@@ -1,0 +1,10 @@
+{
+  "name": "anova_test",
+  "description": "Performs ANOVA analysis on specified factors with optional covariates. Supports one-way, two-way, and multi-way ANOVA designs with Type I, II, or III sum of squares. Calculates effect sizes (eta-squared, partial eta-squared) and performs optional post-hoc multiple comparisons (Tukey HSD, Bonferroni, etc.). Handles both balanced and unbalanced designs. Accepts dataset name, factors as list or comma-separated string, and optional covariates. Returns concise statistical summary; optionally saves detailed results table.",
+  "examples": [
+    "anova_test('experiment_data', 'yield', 'treatment') - One-way ANOVA testing effect of treatment on yield",
+    "anova_test('clinical_trial', 'recovery_time', ['drug_type', 'age_group'], covariates='baseline_score', posthoc='bonferroni', out_dataset='anova_results') - Two-way ANOVA with covariate and Bonferroni post-hoc tests"
+  ],
+  "data_inputs": "dataset (string): Name of dataset in database containing the data\nresponse (string): Name of the dependent/response variable column\nfactors (string or list): Factor variable name(s) - categorical predictors\ncovariates (string or list, optional): Covariate variable name(s) - continuous predictors\ntype (string, optional): Type of sum of squares ('I', 'II', 'III'), default 'II'\nposthoc (string, optional): Post-hoc test method ('tukey', 'bonferroni', 'holm', 'none'), default 'tukey'\nalpha (float, optional): Significance level, default 0.05\nout_dataset (string, optional): Name to save detailed results table",
+  "data_outputs": "Returns string with ANOVA summary including F-statistics, p-values, effect sizes, and post-hoc results if requested. If out_dataset specified, saves detailed results table with all statistics, residuals, and diagnostic information."
+}

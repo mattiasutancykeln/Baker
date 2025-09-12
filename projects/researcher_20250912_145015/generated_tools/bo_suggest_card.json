@@ -1,0 +1,10 @@
+{
+  "name": "bo_suggest",
+  "description": "Bayesian optimization tool that fits a Gaussian Process surrogate on a training dataset and selects top candidates from a separate prediction dataset. Treats all non-response columns as features; categorical features are one-hot encoded; numeric features are scaled. Works purely via the shared db (no external I/O).",
+  "examples": [
+    "bo_suggest('imidazole_arylation_runs', 'reaction_conditions', 'imidazole_arylation_batch3_proposed', 'yield_pct', n=5, acquisition='EI', maximize=True)",
+    "bo_suggest('train_experiments', 'candidate_pool', 'bo_batch1', 'objective', n=10, acquisition='UCB', maximize=False, random_seed=42)"
+  ],
+  "data_inputs": "train_dataset (string): training data with the response column; predict_dataset (string): candidate rows to score/select; response (string): name of response column in training data.",
+  "data_outputs": "out_dataset (string): output dataset containing selected candidates with predicted_mean, predicted_std, and acquisition_score."
+}

@@ -1,0 +1,10 @@
+{
+  "name": "plot_general",
+  "description": "Creates common visualizations for experimental data including scatter/line plots, correlation matrices, and 2D heatmaps/response surfaces. Accepts dataset names and flexible plotting parameters. Automatically infers appropriate columns when not specified and provides helpful guidance for ambiguous inputs. Saves plots as image files to the output directory.",
+  "examples": [
+    "plot_general('experiment_data', 'scatter', 'results_scatter', x='temperature', y='yield', hue='catalyst')\n# Creates scatter plot of yield vs temperature colored by catalyst type",
+    "plot_general('sensor_readings', 'heatmap', 'sensor_heatmap', x='time', y='location', z='value', agg='mean')\n# Creates heatmap showing average sensor values across time and location"
+  ],
+  "data_inputs": "dataset (string): Name of dataset to visualize, or CSV string, or dict-like object\nkind (string): Plot type - 'scatter', 'line', 'matrix', or 'heatmap'\nout_dataset (string): Name for saved plot artifacts\nx, y, z (string, optional): Column names for axes/values\nhue (string, optional): Column for color grouping\nfacets (string, optional): Column for subplot faceting\nagg (string): Aggregation method for heatmaps ('mean', 'sum', 'count')\nmethod (string): Plotting backend ('auto', 'seaborn', 'matplotlib')",
+  "data_outputs": "Saves plot images to output directory as PNG files\nReturns descriptive string about the generated visualization"
+}
