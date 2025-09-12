@@ -1,0 +1,17 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "researcher_with_formatter": {
+      "path": "src/researcher/compile.py:create_app",
+      "description": "Researcher agent wired to the Data Formatter (LLM+tools) with persistent memory and unified data directory"
+    },
+    "Chemcrow": {
+      "path": "src/researcher/compile.py:create_app2",
+      "description": "Researcher agent wired to the Data Formatter (LLM+tools) with persistent memory and unified data directory"
+    },
+    "builder_agent": {
+      "path": "src/builder/agent.py:create_research_agent",
+      "description": "Builder agent"
+    }
+  }
+}

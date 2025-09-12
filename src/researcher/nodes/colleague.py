@@ -20,7 +20,7 @@ class ColleagueNode(UnifiedNodeBase):
             "- Save outputs under clear names; summarize results concisely.\n"
             "- Do not print large data; use dataset_head/dataset_describe if needed.\n"
         )
-        self._llm = init_chat_model(model=model, extra_body=model_extra or None)
+        self._llm = init_chat_model(model=model)
         self._tools = tools
 
     def __call__(self, state: dict) -> dict:

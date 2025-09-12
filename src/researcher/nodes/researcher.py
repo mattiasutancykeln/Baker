@@ -1,6 +1,7 @@
 from __future__ import annotations
-
+import os
 from langchain.chat_models import init_chat_model
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
@@ -37,13 +38,18 @@ class ResearcherNode(UnifiedNodeBase):
     Only delegate when you can't solve the task through scientific reasoning. Sometimes, a logical argument is enough and an advanced statistical analysis provides less insight.
     """
 
-    def __init__(self, *, system_prompt: str, model: str = "openai:gpt-5-medium", model_extra: dict | None = None, **base_kwargs) -> None:
+    def __init__(self, *, system_prompt: str, model: str = "openai:gpt-5-low", **base_kwargs) -> None:
         if not isinstance(system_prompt, str) or not system_prompt.strip():
             raise ValueError("system_prompt must be a non-empty string")
         super().__init__(**base_kwargs)
         self._system_prompt = self.SYSTEM_PROMPT_START + system_prompt + self.SYSTEM_PROMPT_END
-        if model_extra:
-            self._llm = init_chat_model(model=model, extra_body=model_extra)
+        if "openai" in model:
+            self._llm = ChatOpenAI(
+                openai_api_key=os.environ.get('OPENAI_API_KEY'),
+                model_name='gpt-5',
+                max_tokens=8096,
+                reasoning={"effort": "low"}
+        )
         else:
             self._llm = init_chat_model(model=model)
         # Common delegate_to_formatter tool

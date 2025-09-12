@@ -84,7 +84,6 @@ def compile_agent(project_path: str) -> CompiledAgent:
         raise ValueError("Specs missing required key 'main_system_prompt'.")
 
     model_name = os.environ.get("ANTHROPIC_MODEL", "anthropic:claude-sonnet-4-20250514")
-
     # Ensure config and unified data dir
     cfg = ensure_project_config(project_path)
     database = ArrowDatabase(root_dir=Path(cfg.data_dir))
@@ -94,7 +93,7 @@ def compile_agent(project_path: str) -> CompiledAgent:
     graph = StateGraph(ConversationState)
     formatter_app = build_data_formatter_app(project_dir=cfg.project_dir, socket_dir=cfg.socket_dir, db=database, model_name=model_name)
 
-    researcher = ResearcherNode(system_prompt=system_prompt, model=model_name, db=database, cfg=cfg)
+    researcher = ResearcherNode(system_prompt=system_prompt, db=database, cfg=cfg)
 
     # Wrap the formatter sub-app
     def formatter_node(state: ConversationState) -> ConversationState:
@@ -234,10 +233,18 @@ def compile_agent(project_path: str) -> CompiledAgent:
 def create_app() -> Any:
     """
     Zero-argument factory used by `langgraph dev` to serve the research agent
-    for the default project `projects/researcher_20250910_190100`.
+    for the default project `projects/researcher_20250912_145015`.
     """
-    project_path = str(Path(__file__).resolve().parents[2] / "projects" / "researcher_20250910_190100")
+    project_path = str(Path(__file__).resolve().parents[2] / "projects" / "researcher_20250912_145015")
     compiled = compile_agent(project_path)
     return compiled.app
 
+def create_app2() -> Any:
+    """
+    Zero-argument factory used by `langgraph dev` to serve the research agent
+    for the default project `projects/researcher_20250912_185857`.
+    """
+    project_path = str(Path(__file__).resolve().parents[2] / "projects" / "researcher_20250912_185857")
+    compiled = compile_agent(project_path)
+    return compiled.app
 

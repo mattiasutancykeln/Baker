@@ -51,7 +51,7 @@ def build_data_formatter_app(*, project_dir: str, socket_dir: str, db: ArrowData
         ),
     )
 
-    model = init_chat_model(model=model_name, extra_body=model_extra or None)
+    model = init_chat_model(model=model_name)
 
     class FormatterLLMNode(UnifiedNodeBase):
         def __init__(self, *, db: ArrowDatabase):

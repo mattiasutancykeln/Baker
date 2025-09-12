@@ -12,7 +12,7 @@
   "request": "I want to analyze customer behavior data to identify which features predict customer lifetime value, run statistical tests to validate relationships, and build a Gaussian Process model to predict and rank customers by potential value with uncertainty quantification",
   "description": "Complex research requiring both statistical validation and advanced ML modeling. Needs statistical testing (bootstrap, t-tests) and GP modeling with UCB ranking. Requires specialized colleagues with distinct expertise.",
   "output": {
-  "main_system_prompt": "You are the lead research coordinator for a customer analytics project. You orchestrate a team of specialists to analyze customer behavior and predict lifetime value.\nYour team consists of:\n- Statistical Analyst: Performs hypothesis testing, bootstrapping, and statistical validation\n- ML Specialist: Builds Gaussian Process models, makes predictions, and ranks customers using Upper Confidence Bounds\n\nYour role is to:\n1. Begin with data exploration using basic tools and your own intuition\n2. Delegate statistical analysis tasks to the Statistical Analyst\n3. Delegate machine learning tasks to the ML Specialist\n4. Synthesize findings from both specialists into actionable business insights\n5. Coordinate the workflow to ensure statistical validation precedes ML modeling\n\nAlways explain the reasoning behind task delegation and how different analyses complement each other.",
+  "main_system_prompt": "You are the lead research coordinator for a customer analytics project. You orchestrate a team of specialists to analyze customer behavior and predict lifetime value.\nYour team consists of:\n- Statistical Analyst: Performs hypothesis testing, bootstrapping, and statistical validation\n- ML Specialist: Builds Gaussian Process models, makes predictions, and ranks customers using Upper Confidence Bounds\n",
   "colleagues": [
     {
       "name": "statistical_analyst",
@@ -30,10 +30,10 @@
     }
   ],
   "tool_implementations": [
-    "Implement t_test_analysis(dataset, group_col, value_col) that conducts independent t-tests between groups defined by group_col on the values in value_col. Should check assumptions and return test statistics, p-values, effect sizes, and interpretation.", 
-    "Implement correlation_significance(dataset, col1, col2) that tests the statistical significance of correlation between two variables, including confidence intervals and sample size considerations.",
-    "Implement gp_train_predict(x_train, y_train, x_test, predictions_dataset) that trains a Gaussian Process regressor on specified training data using onehot embedding on the training data. Should handle feature scaling, kernel selection, and save the predictions to predictions including original x_test values, mean, and std.",
-    "Implement ucb_ranking(predictions_dataset, confidence_param=1.96, n_top=10) that ranks entries by Upper Confidence Bound (mean + confidence_param * std) to balance expected value with uncertainty for optimal decision making. Return the top n_top entries. Assume predictions_dataset has the columns 'mean', and 'std'. Include an error message if the predictions_dataset is empty or has no predictions, instructing the user to run the gp_train_predict tool first."
+    "Implement t_test_analysis(dataset, group_col, value_col) that performs t-tests with clear, general parameters. Avoid assuming fixed schemas; return a concise string summary and save optional diagnostics if needed.", 
+    "Implement correlation_significance(dataset, col1, col2) to assess correlation significance with confidence intervals. Keep inputs general and errors helpful.",
+    "Implement gp_train_predict(x_train, y_train, x_test, predictions_dataset) that trains a GP regressor and saves predictions (mean, std) under predictions_dataset. Keep interfaces general; avoid enforcing column names.",
+    "Implement ucb_ranking(predictions_dataset, confidence_param=1.96, n_top=10) that ranks by UCB (mean + confidence_param * std). If predictions are missing, return a helpful message instructing to run gp_train_predict first."
   ]
 }
 }

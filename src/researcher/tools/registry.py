@@ -72,15 +72,20 @@ def load_generated_tools(tool_dir: str, *, db: ArrowDatabase, cfg: ProjectConfig
     if not base.exists():
         return {}
 
-    # Load descriptions from JSON toolcards
+    # Load examples from JSON toolcards (drop descriptions)
     descriptions: Dict[str, str] = {}
+    examples_map: Dict[str, list[str]] = {}
     for card in base.glob("*.json"):
         try:
             with card.open("r", encoding="utf-8") as f:
                 data = json.load(f)
             name = (data.get("name") or card.stem).strip()
-            desc = (data.get("description") or "").strip()
-            descriptions[name] = desc
+            # Intentionally ignore card description
+            examples = data.get("examples")
+            if isinstance(examples, list):
+                examples_map[name] = [str(x).strip() for x in examples if str(x).strip()]
+            elif isinstance(examples, str) and examples.strip():
+                examples_map[name] = [s.strip() for s in examples.splitlines() if s.strip()]
         except Exception:
             continue
 
@@ -103,11 +108,20 @@ def load_generated_tools(tool_dir: str, *, db: ArrowDatabase, cfg: ProjectConfig
                 continue
 
             tool_name = attr_name
-            desc = descriptions.get(tool_name, f"Generated tool: {tool_name}")
+            doc = (obj.__doc__ or "").strip()
+            examples_list = examples_map.get(tool_name, [])
+            examples_text = "\n".join(f"- {e}" for e in examples_list) if examples_list else ""
+            # Compose description from docstring and examples only (drop tool descriptions)
+            parts: list[str] = []
+            if doc:
+                parts.append(f"Docstring:\n{doc}")
+            if examples_text:
+                parts.append(f"Examples:\n{examples_text}")
+            desc = "\n\n".join(parts)
             args_schema = _build_args_schema(obj)
             wrapped = _wrap_tool(obj, db=db, cfg=cfg)
             structured = StructuredTool.from_function(
-                lambda **kwargs: wrapped(**kwargs),  # type: ignore[misc]
+                wrapped,
                 name=tool_name,
                 description=desc,
                 args_schema=args_schema,
